@@ -214,17 +214,19 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create or update prometheus operator service account")
 	}
-
+	fmt.Println("create account", ns, namespaceAllowlist, namespaceDenylist, prometheusInstanceNamespaces, alertmanagerInstanceNamespaces)
 	clusterRole, err := f.CreateOrUpdateClusterRole(ctx, fmt.Sprintf("%s/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml", f.exampleDir))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create or update prometheus cluster role")
 	}
+	fmt.Println("create role")
 
 	// Add CRD rbac rules
 	clusterRole.Rules = append(clusterRole.Rules, CRDCreateRule, CRDMonitoringRule)
 	if err := f.UpdateClusterRole(ctx, clusterRole); err != nil {
 		return nil, errors.Wrap(err, "failed to update prometheus cluster role")
 	}
+	fmt.Println("update role")
 
 	if createClusterRoleBindings {
 		if _, err := f.createOrUpdateClusterRoleBinding(ctx, ns, fmt.Sprintf("%s/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml", f.exampleDir)); err != nil {
@@ -262,6 +264,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize Probe CRD")
 	}
+	fmt.Println("create crd")
 
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1.PrometheusName, func(opts metav1.ListOptions) (runtime.Object, error) {
 		return f.MonClientV1.Prometheuses(v1.NamespaceAll).List(ctx, opts)
@@ -269,6 +272,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize Prometheus CRD")
 	}
+	fmt.Println("create crd2")
 
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1.PrometheusRuleName, func(opts metav1.ListOptions) (runtime.Object, error) {
 		return f.MonClientV1.PrometheusRules(v1.NamespaceAll).List(ctx, opts)
@@ -304,6 +308,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 	if err != nil {
 		return nil, errors.Wrap(err, "wait for AlertmanagerConfig v1beta1 CRD")
 	}
+	fmt.Println("wait crd")
 
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1alpha1.PrometheusAgentName, func(opts metav1.ListOptions) (runtime.Object, error) {
 		return f.MonClientV1alpha1.PrometheusAgents(v1.NamespaceAll).List(ctx, opts)
@@ -329,6 +334,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 	if err := f.CreateOrUpdateSecretWithCert(ctx, certBytes, keyBytes, ns, prometheusOperatorCertsSecretName); err != nil {
 		return nil, errors.Wrap(err, "failed to create or update prometheus-operator TLS secret")
 	}
+	fmt.Println("create secret and begin make deployment")
 
 	deploy, err := MakeDeployment(fmt.Sprintf("%s/rbac/prometheus-operator/prometheus-operator-deployment.yaml", f.exampleDir))
 	if err != nil {
@@ -340,6 +346,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
 
+	fmt.Println("opImage: ", f.opImage)
 	var webhookServerImage string
 	if f.opImage != "" {
 		// Override operator image used, if specified when running tests.
@@ -356,11 +363,11 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(ctx context.Context, ns str
 		for i, arg := range deploy.Spec.Template.Spec.Containers[0].Args {
 			if strings.Contains(arg, "--prometheus-config-reloader=") {
 				deploy.Spec.Template.Spec.Containers[0].Args[i] = "--prometheus-config-reloader=" +
-					"quay.io/prometheus-operator/prometheus-config-reloader:" +
+					"zzliu/prometheus-config-reloader:" +
 					repoAndTag[1]
 			}
 		}
-		webhookServerImage = "quay.io/prometheus-operator/admission-webhook:" + repoAndTag[1]
+		webhookServerImage = "zzliu/admission-webhook:" + repoAndTag[1]
 	}
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=all")

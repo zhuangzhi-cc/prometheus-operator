@@ -445,7 +445,7 @@ func (f *Framework) WaitForPrometheusRunImageAndReady(ctx context.Context, ns st
 }
 
 func promImage(version string) string {
-	return fmt.Sprintf("quay.io/prometheus/prometheus:%s", version)
+	return fmt.Sprintf("bitnami/prometheus:%s", version)
 }
 
 // WaitForActiveTargets waits for a number of targets to be configured.

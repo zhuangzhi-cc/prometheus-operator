@@ -9,12 +9,15 @@ else
 endif
 
 CONTAINER_CLI ?= docker
-
+IMAGE_OPERATOR=zzliu/prometheus-operator
+IMAGE_RELOADER=zzliu/prometheus-config-reloader
+IMAGE_WEBHOOK=zzliu/admission-webhook
+TAG=0.3
 GO_PKG=github.com/prometheus-operator/prometheus-operator
-IMAGE_OPERATOR?=quay.io/prometheus-operator/prometheus-operator
-IMAGE_RELOADER?=quay.io/prometheus-operator/prometheus-config-reloader
-IMAGE_WEBHOOK?=quay.io/prometheus-operator/admission-webhook
-TAG?=$(shell git rev-parse --short HEAD)
+# IMAGE_OPERATOR?=quay.io/prometheus-operator/prometheus-operator
+# IMAGE_RELOADER?=quay.io/prometheus-operator/prometheus-config-reloader
+# IMAGE_WEBHOOK?=quay.io/prometheus-operator/admission-webhook
+# TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
 TYPES_V1_TARGET := pkg/apis/monitoring/v1/types.go

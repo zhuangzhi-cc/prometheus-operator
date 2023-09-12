@@ -37,7 +37,7 @@ var (
 	// DefaultPrometheusVersion is a default image tag for the prometheus
 	DefaultPrometheusVersion = PrometheusCompatibilityMatrix[len(PrometheusCompatibilityMatrix)-1]
 	// DefaultPrometheusBaseImage is a base container registry address for the prometheus
-	DefaultPrometheusBaseImage = "quay.io/prometheus/prometheus"
+	DefaultPrometheusBaseImage = "bitnami/prometheus"
 	// DefaultPrometheusImage is a default image pulling address for the prometheus
 	DefaultPrometheusImage = DefaultPrometheusBaseImage + ":" + DefaultPrometheusVersion
 
